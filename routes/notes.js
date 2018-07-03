@@ -16,7 +16,7 @@ const knex = require('../knex');
 router.get('/', (req, res, next) => {
   const searchTerm = req.query.searchTerm;
 
-  knex.select('id', 'title', 'content')
+  knex.select()
     .from('notes')
     .modify(function (queryBuilder) {
       if (searchTerm) {
@@ -39,8 +39,12 @@ router.get('/:id', (req, res, next) => {
   knex('notes')
     .first()
     .where({id: id})
-    .then(results => {
-      res.json(results);
+    .then(item => {
+      if (item) {
+        res.json(item);
+      } else {
+        next();
+      }
     })
     .catch(err => {
       next(err);
@@ -72,8 +76,12 @@ router.put('/:id', (req, res, next) => {
     .update(updateObj)
     .where({id: id})
     .returning(['id', 'title', 'content'])
-    .then(([results]) => {
-      res.json(results);
+    .then(([item]) => {
+      if (item) {
+        res.json(item);
+      } else {
+        next();
+      }
     })
     .catch(err => {
       next(err);
@@ -95,8 +103,10 @@ router.post('/', (req, res, next) => {
   knex('notes')
     .insert(newItem)
     .returning(['id', 'title', 'content'])
-    .then(([results]) => {
-      res.json(results);
+    .then(([item]) => {
+      if (item) {
+        res.location(`http://${req.headers.host}/notes/${item.id}`).status(201).json(item);
+      }
     })
     .catch(err => {
       next(err);
@@ -110,8 +120,9 @@ router.delete('/:id', (req, res, next) => {
   knex('notes')
     .where({id: id})
     .del()
-    .then(
-      res.sendStatus(204))
+    .then(() => {
+      res.sendStatus(204);
+    })
     .catch(err => {
       next(err);
     });
