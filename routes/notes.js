@@ -16,6 +16,8 @@ const knex = require('../knex');
 router.get('/', (req, res, next) => {
   const searchTerm = req.query.searchTerm;
   const folderId = req.query.folderId;
+  // console.log('SEARCH TERM', searchTerm);
+  // console.log('FOLDER-ID', folderId);
 
   knex.select('notes.id', 'title', 'content', 'folders.id as folderId', 'folders.name as folderName')
     .from('notes')

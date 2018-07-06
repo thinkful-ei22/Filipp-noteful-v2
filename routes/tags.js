@@ -6,22 +6,22 @@ const router = express.Router();
 
 const knex = require('../knex');
 
-//Get ALL
+//GET ALL
 router.get('/', (req, res, next) => {
   knex.select('id', 'name')
-    .from('folders')
-    .orderBy('folders.id')
+    .from('tags')
+    .orderBy('tags.id')
     .then(results => {
       res.json(results);
     })
     .catch(err => next(err));
 });
 
-//Get Folder by id
+//GET by ID
 router.get('/:id', (req, res, next) => {
   const id = req.params.id;
 
-  knex('folders')
+  knex('tags')
     .first()
     .where({id: id})
     .then(item => {
@@ -36,11 +36,10 @@ router.get('/:id', (req, res, next) => {
     });
 });
 
-//Update Folder
+//Update Tags (PUT)
 router.put('/:id', (req, res, next) => {
   const id = req.params.id;
 
-  /***** Never trust users - validate input *****/
   const updateObj = {};
   const updateableFields = ['name'];
 
@@ -50,14 +49,15 @@ router.put('/:id', (req, res, next) => {
     }
   });
 
-  /***** Never trust users - validate input *****/
-  if (!updateObj.name) {
+  //Validate input
+
+  if(!updateObj.name) {
     const err = new Error('Missing `name` in request body');
     err.status = 400;
     return next(err);
   }
 
-  knex('folders')
+  knex('tags')
     .update(updateObj)
     .where({id: id})
     .returning(['id', 'name'])
@@ -67,42 +67,39 @@ router.put('/:id', (req, res, next) => {
       } else {
         next();
       }
-    })
-    .catch(err => {
-      next(err);
     });
 });
 
-//Create Folder
+
+//Create new tag (POST)
 router.post('/', (req, res, next) => {
   const { name } = req.body;
 
-  const newItem = { name };
-  /***** Never trust users - validate input *****/
-  if (!newItem.name) {
+  /***** Never trust users. Validate input *****/
+  if (!name) {
     const err = new Error('Missing `name` in request body');
     err.status = 400;
     return next(err);
   }
 
-  knex('folders')
-    .insert(newItem)
+  const newItem = { name };
+
+  knex.insert(newItem)
+    .into('tags')
     .returning(['id', 'name'])
-    .then(([item]) => {
-      if (item) {
-        res.location(`http://${req.headers.host}/folders/${item.id}`).status(201).json(item);
-      }
+    .then((results) => {
+      // Uses Array index solution to get first item in results array
+      const result = results[0];
+      res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
     })
-    .catch(err => {
-      next(err);
-    });
+    .catch(err => next(err));
 });
 
-//Delete Folder
+//Delete tag (DELETE)
 router.delete('/:id', (req, res, next) => {
   const id = req.params.id;
 
-  knex('folders')
+  knex('tags')
     .where({id: id})
     .del()
     .then(() => {
@@ -112,6 +109,7 @@ router.delete('/:id', (req, res, next) => {
       next(err);
     });
 });
+
 
 
 
