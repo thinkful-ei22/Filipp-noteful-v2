@@ -23,7 +23,7 @@ router.get('/', (req, res, next) => {
   // console.log('SEARCH TERM', searchTerm);
   // console.log('FOLDER-ID', folderId);
 
-  knex.select('notes.id', 'title', 'content', 'folders.id as folderId', 'folders.name as folderName', 'tags.id as tagId', 'tags.name as tagName')
+  knex.select('notes.id', 'title', 'content', 'folders.id as folderId', 'folders.name as folderName', 'tags.id as tagId', 'tags.name as tagName', 'created')
     .from('notes')
     .leftJoin('folders', 'notes.folders_id', 'folders.id')
     .leftJoin('notes_tags', 'notes.id', 'notes_tags.note_id')
@@ -70,7 +70,7 @@ router.get('/:id', (req, res, next) => {
     .then(result => {
       if (result) {
         const hydrated = hydrateNotes(result);
-        res.json(hydrated);
+        res.json(hydrated[0]);
       } else {
         next();
       }
